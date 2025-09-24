@@ -1,1 +1,1 @@
-from app.schemas.message import Message
+from app.schemas.message import MessageDataInput

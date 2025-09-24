@@ -1,5 +1,8 @@
+from app.errors import ClassifierNotConfiguredError
+
+
 class BaseClassifier:
 
-    def classify(self, text: str, bio: str) -> bool:
+    async def classify(self, text: str, bio: str) -> bool:
 
-        raise NotImplementedError
+        raise ClassifierNotConfiguredError()

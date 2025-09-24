@@ -4,6 +4,7 @@
         "searching",
         "team",
         "invest",
+        "collab",
         "buy",
         "sell",
         "hiring",
@@ -11,12 +12,16 @@
         "project",
         "partnership",
         "cofounder",
-        "funding"
+        "funding",
+        "founder",
+        "cofounder",
+        "investor"
     ],
     "bio_keywords": [
         "founder",
         "cofounder",
         "ceo",
+        "manager",
         "entrepreneur",
         "business",
         "investor",

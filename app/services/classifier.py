@@ -1,60 +1,84 @@
 from app.config.settings import settings
-from openai import OpenAI
 from app.services.base import BaseClassifier
+from app.errors import (
+    ClassifierConnectionError,
+    ClassificationFailedError,
+    ClassifierNotConfiguredError,
+)
+from openai import AsyncOpenAI, APIConnectionError, RateLimitError
+from asyncio import sleep
 
 
-class MockClassifier(BaseClassifier):
+class MockClassifierService(BaseClassifier):
 
-    def __init__(self):
-
-        self.TEXT_KEYWORDS, self.BIO_KEYWORDS = settings.load_keywords()
-
-    def classify(self, text: str, bio: str) -> bool:
+    async def classify(self, text: str, bio: str) -> bool:
 
         text_lower = text.lower()
         bio_lower = bio.lower()
 
-        text_match = any(word in text_lower for word in self.TEXT_KEYWORDS)
-        bio_match = any(word in bio_lower for word in self.BIO_KEYWORDS)
+        await sleep(2.5)
+
+        text_match = any(
+            word in text_lower for word in settings.openai_mock_keywords_text
+        )
+        bio_match = any(word in bio_lower for word in settings.openai_mock_keywords_bio)
 
         return text_match or bio_match
 
 
-class OpenAIClassifier(BaseClassifier):
+class OpenAIClassifierService(BaseClassifier):
 
     def __init__(self, api_key: str):
 
-        self.client = OpenAI(api_key=api_key)
+        self.client = AsyncOpenAI(api_key=api_key)
 
-    def classify(self, text: str, bio: str) -> bool:
+    async def classify(self, text: str, bio: str) -> bool:
 
-        openai_prompts = settings.load_prompts()
+        text_lower = text.lower()
+        bio_lower = bio.lower()
 
         try:
-            prompt = openai_prompts["prompt"]
-        except KeyError:
-            raise
 
-        response = self.client.chat.completions.create(
-            model=settings.openai_model,
-            messages=[
-                {
-                    "role": settings.openai_role,
-                    "content": prompt,
-                },
-                {"text": text, "bio": bio},
-            ],
-            max_tokens=5,
-        )
-        content = response.choices[0].message.content.lower()
-        return "lead" in content
+            response = await self.client.chat.completions.create(
+                model=settings.openai_model,
+                messages=[
+                    {
+                        "role": settings.openai_role,
+                        "content": settings.openai_prompt,
+                    },
+                    {
+                        "role": "user",
+                        "content": f"Text: {text_lower}\nBio: {bio_lower}",
+                    },
+                ],
+                max_tokens=5,
+            )
+            content = response.choices[0].message.content.lower()
+            return content.strip() == "lead"
+
+        except (APIConnectionError, TimeoutError):
+            raise ClassifierConnectionError()
+
+        except RateLimitError:
+            raise ClassificationFailedError(
+                "The quota is reached for the OpenAI billing plan."
+            )
+
+        except Exception as exc:
+            raise ClassificationFailedError(text=str(exc))
 
 
 class ClassifierFactory:
-    """Factory to create classifier service based on config."""
 
     @staticmethod
     def create() -> BaseClassifier:
-        if USE_OPENAI and OPENAI_API_KEY:
-            return OpenAIClassifier(api_key=OPENAI_API_KEY)
-        return MockClassifier()
+
+        if settings.use_mocked_openapi:
+            return MockClassifierService()
+
+        if not settings.openai_api_key:
+            raise ClassifierNotConfiguredError(
+                text="Missing API key for the classifier."
+            )
+
+        return OpenAIClassifierService(api_key=settings.openai_api_key)
