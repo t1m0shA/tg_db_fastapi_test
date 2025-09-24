@@ -27,7 +27,7 @@ pip install -r requirements.txt
 ##
 ### 6. Запустить FastAPI + PostgreSQL в Docker
 ```sh
-docker compose up --build
+docker compose up --build -d
 ```
 ##
 ### 7. Посмотреть эндпоинты на [http://127.0.0.1:8001/docs](http://127.0.0.1:8001/docs)
@@ -40,3 +40,4 @@ python -m tel.main
 ```
 Он также еще делает запрос к FastAPI на проверку lead/not_lead
 ##
+
