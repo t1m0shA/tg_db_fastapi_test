@@ -38,6 +38,7 @@ docker compose up --build -d
 ```sh
 python -m tel.main
 ```
-Он также еще делает запрос к FastAPI на проверку lead/not_lead
+Он также еще делает запрос к FastAPI на проверку lead/not_lead. Тексты сообщений нужно писать на английском
 ##
+
 
