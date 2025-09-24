@@ -73,7 +73,7 @@ class ClassifierFactory:
     @staticmethod
     def create() -> BaseClassifier:
 
-        if settings.use_mocked_openapi:
+        if settings.use_mocked_openai:
             return MockClassifierService()
 
         if not settings.openai_api_key:

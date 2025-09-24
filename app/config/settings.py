@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     openai_model: str
     openai_prompt: str | None = None
 
-    use_mocked_openapi: bool
+    use_mocked_openai: bool
     openai_mock_keywords_text: list[str] = []
     openai_mock_keywords_bio: list[str] = []
 
